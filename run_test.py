@@ -371,12 +371,14 @@ def check_deps():
         exit("The CUDA header files have not been detected. Please double check setting for CUDA header files.")
 
     # Please specify oneMKL build and run environment by following oneAPI document.
+'''
     if os.getenv("MKLROOT"):
         mkl_header = os.path.join(os.environ["MKLROOT"], "include", "mkl.h")
         if not os.path.exists(mkl_header) and os.getenv("MKLVER"):
             mkl_header = os.path.join(os.environ["MKLROOT"], os.environ["MKLVER"], "include", "mkl.h")
     else:
         exit("MKL header files have not been found. Please check setting for oneMKL.")
+'''
 
 def do_sanity_test():
     check_deps()
@@ -488,7 +490,7 @@ def parse_input_args():
     return args
 
 def main():
-    set_default_compiler()
+    #set_default_compiler()
     args = parse_input_args()
     do_sanity_test()
 

@@ -14,5 +14,6 @@ __global__ void hello_gpu(int n) {
 
 int main(){
   hello_gpu<<<1, 1>>>(1); 
+  cudaDeviceSynchronize();
   return 0;
 }
