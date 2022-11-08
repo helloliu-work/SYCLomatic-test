@@ -201,26 +201,20 @@ def run_test_driver(module):
 
     ret_val = test_setup(module, specific_module)
     if ret_val:
-        ret_val = test_migrate(module, specific_module)
-        migrated = True
+        ret_val = test_build(module, specific_module)
+        built = True
     else:
         test_config.test_status = "BADTEST"
 
     if ret_val:
-        ret_val = test_build(module, specific_module)
-        built = True
-    elif migrated:
-        test_config.test_status = "MIGFAIL"
-
-    if ret_val:
         ret_val = run_migrated_binary_test(module, specific_module)
         run = True
-    elif migrated and built:
+    elif built:
         test_config.test_status = "COMPFAIL"
 
-    if migrated and built and run and ret_val:
+    if built and run and ret_val:
         test_config.test_status = "PASS"
-    elif migrated and built and run:
+    elif built and run:
         test_config.test_status = "RUNFAIL"
 
     if is_registered_module(case_workspace):
@@ -301,7 +295,7 @@ def test_single_case(current_test, single_case_config, workspace, module, suite_
     return run_test_driver(module)
 
 def prepare_test_workspace(root_path, suite_name, opt, case = ""):
-    suite_workspace = os.path.join(os.path.abspath(root_path), suite_name, opt)
+    suite_workspace = os.path.join(os.path.abspath(root_path), suite_name)
     case_workspace = os.path.join(suite_workspace, case)
     test_config.command_file = os.path.join(suite_workspace, "command.tst")
     test_config.result_text = os.path.join(suite_workspace, "result.md")

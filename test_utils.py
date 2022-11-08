@@ -86,14 +86,8 @@ def prepare_obj_name(src):
     return '.'.join(obj_name)
 
 def compile_and_link(srcs, cmpopts = [], objects = [], linkopt = []):
-    #if not compile_files(srcs, cmpopts):
-    #    return False
     obj_files = []
-    for src in srcs:
-        new_obj = src
-        if new_obj not in obj_files:
-            obj_files.append(new_obj)
-    cmd = test_config.DPCXX_COM + ' '  + ' '.join(obj_files) + ' ' + \
+    cmd = test_config.DPCXX_COM + ' '  + ' '.join(srcs) + ' ' + \
                         ' '.join(linkopt) + ' ' + ' '.join(objects) + ' -o ' + test_config.current_test + '.run \n'
     print("cmd: {}".format(cmd))
     return call_subprocess(cmd)
@@ -184,7 +178,9 @@ def print_result(case, status, details_log):
     #print("========== Device Runtime Info: ===============")
     #print(test_config.command_output)
     #print("=============================================\n")
-    print("----------------------------\n" + details_log + "\n----------------------\n")
+    print("details_log:")
+    print(details_log)
+    print("-"*50)
 
 def is_sub_string(substr, fullstr):
     if substr in fullstr:

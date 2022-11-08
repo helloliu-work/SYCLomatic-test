@@ -21,16 +21,6 @@ def setup_test():
 
 def migrate_test():
     return True
-    src = []
-    extra_args = []
-    in_root = os.path.join(os.getcwd(), test_config.current_test)
-    test_config.out_root = os.path.join(in_root, 'out_root')
-
-    for dirpath, dirnames, filenames in os.walk(in_root):
-        for filename in [f for f in filenames if re.match('.*(cu|cpp|c)$', f)]:
-            src.append(os.path.abspath(os.path.join(dirpath, filename)))
-
-    return do_migrate(src, in_root, test_config.out_root, extra_args)
 
 def build_test():
     #if (os.path.exists(test_config.current_test)):
@@ -50,5 +40,4 @@ def build_test():
     return ret
 
 def run_test():
-    os.environ['SYCL_DEVICE_FILTER'] = test_config.device_filter
     return run_binary_with_args()
