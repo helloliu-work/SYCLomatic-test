@@ -16,6 +16,7 @@ suite_list_file = "test_suite_list.xml"   # The configuration file lists all the
 VERBOSE_LEVEL = 0       # Debug verbose level： 0: silent all the debug information. None 0: turn on all the debug information.
 
 current_test = ""  # The name of current test. The test driver will automatically set a name for current test, if the current test is empty.
+test_src_dir=""
 command_file = ""  # Used to store the execution command.
 log_file = ""      # Default: <workspace>/[test name].lf
 result_text = ""   # Default: <workspace>/result.md

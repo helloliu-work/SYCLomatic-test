@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 
 parent = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-source_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(parent)
 from test_utils import *
 
@@ -23,15 +22,12 @@ def migrate_test():
     return True
 
 def build_test():
-    #if (os.path.exists(test_config.current_test)):
-    #    os.chdir(test_config.current_test)
-    curr_src_dir = os.path.join(source_dir, "src", test_config.current_test)
     srcs = []
     cmp_opts = []
     link_opts = ''
     objects = ''
 
-    for dirpath, dirnames, filenames in os.walk(curr_src_dir):
+    for dirpath, dirnames, filenames in os.walk(test_config.test_src_dir):
         for filename in [f for f in filenames if re.match('.*(cpp|c|cu)$', f)]:
             srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
 

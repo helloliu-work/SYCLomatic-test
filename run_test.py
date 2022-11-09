@@ -290,6 +290,7 @@ def test_single_case(current_test, single_case_config, workspace, module, suite_
         os.makedirs(case_workspace)
     os.chdir(workspace)
 
+    test_config.test_src_dir = case_workspace
     test_config.log_file = os.path.join(workspace, current_test + ".lf")
     copy_source_to_ws(single_case_config.test_dep_files, case_workspace, suite_root_path)
     return run_test_driver(module)

@@ -86,7 +86,12 @@ def prepare_obj_name(src):
     return '.'.join(obj_name)
 
 def compile_and_link(srcs, cmpopts = [], objects = [], linkopt = []):
-    obj_files = []
+    # obj_files = []
+    # srcs=[]
+    # src_dir=os.path.join()
+    # for dirpath, dirnames, filenames in os.walk(curr_src_dir):
+    #     for filename in [f for f in filenames if re.match('.*(cpp|c|cu)$', f)]:
+    #         srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
     cmd = test_config.DPCXX_COM + ' '  + ' '.join(srcs) + ' ' + \
                         ' '.join(linkopt) + ' ' + ' '.join(objects) + ' -o ' + test_config.current_test + '.run \n'
     print("cmd: {}".format(cmd))

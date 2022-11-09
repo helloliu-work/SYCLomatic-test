@@ -42,7 +42,7 @@ int main(){
   unsigned long long* d_data_ull;
   curandGenerateLongLong(rng, d_data_ull, 100*100);
 
-  if(s1 = curandGenerateLongLong(rng, d_data_ull, 100*100)){}
+  if(s1 == curandGenerateLongLong(rng, d_data_ull, 100*100)){}
 
   if(curandGenerateLongLong(rng, d_data_ull, 100*100)){}
 
