@@ -39,12 +39,32 @@ oneDNN_related = ['cudnn-activation', 'cudnn-fill', 'cudnn-lrn', 'cudnn-memory',
 
 thrust_related = ['thrust-vector-2', 'thrust-binary-search', 'thrust-count', 'thrust-copy', 'thrust-transform-if',
                 'thrust-policy', 'thrust-list', 'thrust-gather', 'thrust-scatter', 'thrust-unique_by_key_copy', 
-                'thrust-for-hypre', 'thrust-find', 'thrust-sort_by_key', 'thrust-inner_product', 'thrust-reduce_by_key']
+                'thrust-for-hypre', 'thrust-find', 'thrust-sort_by_key', 'thrust-inner_product', 'thrust-reduce_by_key',
+                'thrust-qmc', 'thrust-unique_by_key']
 
 oneDPL_related = ['thrust-vector', 'thrust-for-h2o4gpu', 'thrust-for-RapidCFD', 'cub_device',
              'cub_block_p2', 'DplExtrasDpcppExtensions_api_test1', 'DplExtrasDpcppExtensions_api_test2',
              'DplExtrasDpcppExtensions_api_test3', 'DplExtrasDpcppExtensions_api_test4']
 
+cuda_v11_related = ['pointer_attributes']
+
+cg_related = ['grid_sync', 'cooperative_groups', 'free-queries']
+
+cusolverDn_related = ['cusolverDnEi', 'cusolverDnEi-part2', 'cusolverDnLn', 'cusolverDnLn_cuda10-1', 'cusolverDnLn_cuda10-1-part2', 'cusolverDnLn-part2']
+
+cub_related = ['']
+
+def whether_skip(current_test):
+    if current_test in oneDNN_related:
+        return True
+    if current_test in thrust_related:
+        return True
+    if current_test in cuda_v11_related:
+        return True
+    if current_test in cg_related:
+        return True
+    if current_test in cusolverDn_related:
+        return True
 
 def setup_test():
     return True
@@ -53,10 +73,10 @@ def migrate_test():
     return True
 
 def build_test():
-    if test_config.current_test in oneDNN_related:
+
+    if whether_skip(test_config.current_test):
         return True
-    if test_config.current_test in thrust_related:
-        return True
+
     srcs = []
     cmp_options = []
     link_opts = []
@@ -69,14 +89,15 @@ def build_test():
         for filename in [f for f in filenames if re.match('.*(cpp|c|cu)$', f)]:
             srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
 
-    print("before_link_opts: {}".format(link_opts))
     if platform.system() == 'Linux':
         link_opts.append(' -lpthread ')
-    print("after_link_opts: {}".format(link_opts))
+
+    if re.match('^cufft.*', test_config.current_test):
+        link_opts.append(' -lcufft')
 
     ret = False
     if test_config.current_test == 'cufft_test':
-        ret = compile_and_link([os.path.join(test_config.out_root, 'cufft_test.dp.cpp')], cmp_options, objects, link_opts)
+        ret = compile_and_link(srcs, cmp_options, objects, link_opts)
     elif test_config.current_test in exec_tests:
         ret = compile_and_link(srcs, cmp_options, objects, link_opts)
     elif re.match('^cufft.*', test_config.current_test) and platform.system() == 'Linux':
@@ -89,10 +110,8 @@ def build_test():
 def run_test():
     if test_config.current_test not in exec_tests:
         return True
-    # skip DNN
-    if test_config.current_test in oneDNN_related:
-        return True
-    if test_config.current_test in thrust_related:
+
+    if whether_skip(test_config.current_test):
         return True
 
     if test_config.current_test == 'ccl':

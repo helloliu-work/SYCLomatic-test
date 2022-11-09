@@ -23,7 +23,9 @@ curandStatus_t foo(
   curandStatus_t a10,
   curandStatus_t a11,
   curandStatus_t a12,
-  curandStatus_t a13) {}
+  curandStatus_t a13) { 
+    return CURAND_STATUS_SUCCESS;
+}
 
 int main() {
   curandStatus_t a1 = CURAND_STATUS_SUCCESS;

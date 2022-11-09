@@ -19,28 +19,16 @@ def setup_test():
     return True
 
 def migrate_test():
-    src = []
-    extra_args = []
-    in_root = os.path.join(os.getcwd(), test_config.current_test)
-    test_config.out_root = os.path.join(in_root, 'out_root')
-
-    for dirpath, dirnames, filenames in os.walk(in_root):
-        for filename in [f for f in filenames if re.match('.*(cu|cpp|c)$', f)]:
-            src.append(os.path.abspath(os.path.join(dirpath, filename)))
-
-
-    return do_migrate(src, in_root, test_config.out_root, extra_args)
+    return True
 
 def build_test():
-    if (os.path.exists(test_config.current_test)):
-        os.chdir(test_config.current_test)
     srcs = []
     cmp_opts = ''
     link_opts = ''
     objects = ''
 
-    for dirpath, dirnames, filenames in os.walk(test_config.out_root):
-        for filename in [f for f in filenames if re.match('.*(cpp|c)$', f)]:
+    for dirpath, dirnames, filenames in os.walk(test_config.test_src_dir):
+        for filename in [f for f in filenames if re.match('.*(cpp|c|cu)$', f)]:
             srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
     ret = False
     ret = compile_files(srcs, cmp_opts)

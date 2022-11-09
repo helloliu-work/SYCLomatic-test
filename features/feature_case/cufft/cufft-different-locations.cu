@@ -61,8 +61,6 @@ int main() {
   }
 
   cufftHandle plan7;
-  for (0;;) {
-  }
   for (cufftMakePlanMany(plan7, 3, n, inembed, istride, idist, onembed, ostride, odist, CUFFT_Z2D, 12, work_size);;) {
   }
   for (cufftExecZ2D(plan7, idata, odata);;) {
@@ -103,10 +101,10 @@ cufftResult foo2(cufftHandle plan) {
 }
 
 cufftResult foo3(cufftHandle plan) {
-  cufftMakePlanMany(plan, 3, n, inembed, istride, idist, onembed, ostride, odist, CUFFT_Z2D, 12, work_size);
+  return cufftMakePlanMany(plan, 3, n, inembed, istride, idist, onembed, ostride, odist, CUFFT_Z2D, 12, work_size);
 }
 
 cufftResult foo4(cufftHandle plan) {
-  cufftExecZ2D(plan, idata, odata);
+  return cufftExecZ2D(plan, idata, odata);
 }
 

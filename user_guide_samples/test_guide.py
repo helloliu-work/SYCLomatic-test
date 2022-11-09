@@ -22,14 +22,27 @@ def migrate_test():
     return True
 
 def build_test():
-    return True
+    srcs = []
+    cmp_opts = []
+    link_opts = []
+    objects = []
+
+    for dirpath, dirnames, filenames in os.walk(test_config.test_src_dir):
+        for filename in [f for f in filenames if re.match('.*(cpp|c|cu)$', f)]:
+            srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
+
+    ret = False
+    ret = compile_and_link(srcs, cmp_opts)
+    return ret
 
 def run_test():
-    change_dir(test_config.current_test)
-    test_driver = test_config.current_test + ".py"
-    options = " \" \""
-    os.environ['SYCL_DEVICE_FILTER'] = test_config.device_filter
-    call_subprocess("python " + test_driver + options)
-    if "case pass" in test_config.command_output:
-        return True
-    return False
+    # change_dir(test_config.current_test)
+    # test_driver = test_config.current_test + ".py"
+    # options = " \" \""
+    # # os.environ['SYCL_DEVICE_FILTER'] = test_config.device_filter
+    # call_subprocess("python " + test_driver + options)
+    # if "case pass" in test_config.command_output:
+    #     return True
+    # return False
+    args = []
+    return run_binary_with_args(args)

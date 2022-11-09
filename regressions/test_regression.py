@@ -34,7 +34,6 @@ def build_test():
             srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
 
     ret = False
-    #ret = compile_and_link(srcs, cmp_opts, objects, link_opts)
     ret = compile_and_link(srcs, cmp_opts)
     return ret
 

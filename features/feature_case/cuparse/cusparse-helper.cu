@@ -56,5 +56,5 @@ int foo(int aaaaa){
   cusparseDestroy(handle);
 }
 
-int foo(cusparseMatDescr_t descrB){}
+int foo(cusparseMatDescr_t descrB){ return 0;}
 

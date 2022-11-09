@@ -68,33 +68,21 @@ def print_debug_log(desc, *args):
         print('\n')
 
 def compile_files(srcs, cmpopts = []):
+    print('-' * 60)
     ret = True
     base_cmd = test_config.DPCXX_COM + " -c "
-    if (platform.system() == 'Windows'):
-        base_cmd += " /EHsc -DNOMINMAX "
     for src in srcs:
         cmd = base_cmd + src + ' ' + ' '.join(cmpopts)
+        print(cmd)
         ret = call_subprocess(cmd) and ret
     return ret
 
-def prepare_obj_name(src):
-    obj_name = re.split('\.', os.path.basename(src))
-    suffix = 'o'
-    if (platform.system() == 'Windows'):
-      suffix = 'obj'
-    obj_name[-1] = suffix
-    return '.'.join(obj_name)
-
 def compile_and_link(srcs, cmpopts = [], objects = [], linkopt = []):
-    # obj_files = []
-    # srcs=[]
-    # src_dir=os.path.join()
-    # for dirpath, dirnames, filenames in os.walk(curr_src_dir):
-    #     for filename in [f for f in filenames if re.match('.*(cpp|c|cu)$', f)]:
-    #         srcs.append(os.path.abspath(os.path.join(dirpath, filename)))
+    print('-' * 60)
     cmd = test_config.DPCXX_COM + ' '  + ' '.join(srcs) + ' ' + \
                         ' '.join(linkopt) + ' ' + ' '.join(objects) + ' -o ' + test_config.current_test + '.run \n'
-    print("cmd: {}".format(cmd))
+    # print("cmd: {}".format(cmd))
+    print(cmd)
     return call_subprocess(cmd)
 
 
@@ -148,18 +136,7 @@ def append_msg_to_file(file_path, msg):
 
 
 def do_migrate(src, in_root, out_root, extra_args = []):
-    cmd = test_config.CT_TOOL  + " --cuda-include-path=" + test_config.include_path + \
-            ' ' + ' '.join(src)
-    if in_root:
-        cmd += ' --in-root ' + os.path.abspath(in_root)
-    if out_root:
-        cmd += ' --out-root ' + out_root
-    if extra_args:
-        for arg in extra_args:
-            cmd +=  ' --extra-arg=\" ' + arg + '\"'
-    if test_config.migrate_option:
-        cmd += ' ' + test_config.migrate_option
-    return call_subprocess(cmd)
+    pass
 
 def check_migration_result(msg):
     with open(test_config.log_file, 'a+') as f:
@@ -178,14 +155,11 @@ def is_registered_module(test_case_workspace):
 
 # Print the failed test result and details in the screen.
 def print_result(case, status, details_log):
-    print("============= " + case + ": " + status + " ==================\n")
-    #call_subprocess("sycl-ls")
-    #print("========== Device Runtime Info: ===============")
-    #print(test_config.command_output)
-    #print("=============================================\n")
-    print("details_log:")
+    print("Testing: ", case)
+    print("Result:  ", status)
+    print("Output:")
     print(details_log)
-    print("-"*50)
+
 
 def is_sub_string(substr, fullstr):
     if substr in fullstr:

@@ -24,6 +24,8 @@ from argparse import RawTextHelpFormatter
 
 from test_utils import *
 
+result_string = ""
+
 
 class suite_config:
     def __init__(self, suite_name, test_config_map, suite_deps_files):
@@ -192,6 +194,7 @@ def run_test_driver(module):
     test_config.test_status = ""
     ret_val = True
     specific_module = ""
+    test_config.command_output = ""
 
     if is_registered_module(case_workspace):
         specific_module = import_test_module(case_workspace)
@@ -295,7 +298,7 @@ def test_single_case(current_test, single_case_config, workspace, module, suite_
     copy_source_to_ws(single_case_config.test_dep_files, case_workspace, suite_root_path)
     return run_test_driver(module)
 
-def prepare_test_workspace(root_path, suite_name, opt, case = ""):
+def prepare_test_workspace(root_path, suite_name, case = ""):
     suite_workspace = os.path.join(os.path.abspath(root_path), suite_name)
     case_workspace = os.path.join(suite_workspace, case)
     test_config.command_file = os.path.join(suite_workspace, "command.tst")
@@ -311,44 +314,47 @@ def prepare_test_workspace(root_path, suite_name, opt, case = ""):
 # Split the GPU backend to double and none double kernel type.
 def get_gpu_split_test_suite(suite_cfg):
     # Not specific the backend device, execute all the test cases.
-    if not test_config.backend_device:
-        return suite_cfg.test_config_map
+    # if not test_config.backend_device:
+    #     return suite_cfg.test_config_map
     new_test_config_map = {}
     for current_test, case_config in suite_cfg.test_config_map.items():
         # Run the test case on the GPU device that support the double kernel type.
-        if test_config.backend_device in test_config.support_double_gpu and case_config.split_group == "double":
-            new_test_config_map[current_test] = case_config
-        elif test_config.backend_device not in test_config.support_double_gpu and not case_config.split_group:
-            new_test_config_map[current_test] = case_config
+        # if test_config.backend_device in test_config.support_double_gpu and case_config.split_group == "double":
+        new_test_config_map[current_test] = case_config
+        # elif test_config.backend_device not in test_config.support_double_gpu and not case_config.split_group:
+            # new_test_config_map[current_test] = case_config
     return new_test_config_map
-def test_suite(suite_root_path, suite_name, opt):
+def test_suite(suite_root_path, suite_name):
     test_ws_root = os.path.join(os.path.dirname(suite_root_path), "test_workspace")
     # module means the test driver for a test suite.
     module = import_test_driver(suite_root_path)
     test_config.suite_cfg = parse_suite_cfg(suite_name, suite_root_path)
-    test_workspace = prepare_test_workspace(test_ws_root, suite_name, opt)
+    test_workspace = prepare_test_workspace(test_ws_root, suite_name)
     suite_result = True
     failed_cases = []
     test_config.suite_cfg.test_config_map = get_gpu_split_test_suite(test_config.suite_cfg)
     for current_test, single_case_config in test_config.suite_cfg.test_config_map.items():
         ret = test_single_case(current_test, single_case_config, test_workspace, module, suite_root_path)
         if not ret:
-            failed_cases.append(current_test + " " + test_config.test_status)
+            failed_cases.append(current_test + " : " + test_config.test_status)
         suite_result = ret & suite_result
     if failed_cases:
-        print("===============Failed case(s) ==========================")
+        global result_string
+        # print("{} Total {} Failed case(s) {}".format('='*15, len(failed_cases), '='*15))
+        result_string += "{} {} has {} Failed case(s) {}\n".format('='*15, suite_name, len(failed_cases), '='*15)
         for case in failed_cases:
-            print(case + " \n")
-        print("=========================================")
+            # print(case + " \n")
+            result_string += case +" \n"
+        # print("=" * 50)
+        result_string += "=" * 50 + "\n\n"
     return suite_result
 
-def test_single_case_in_suite(suite_root_path, suite_name, case, option):
+def test_single_case_in_suite(suite_root_path, suite_name, case):
     test_ws_root = os.path.join(os.path.dirname(suite_root_path), "test_workspace")
     module = import_test_driver(suite_root_path)
     test_config.suite_cfg = parse_suite_cfg(suite_name, suite_root_path)
-    test_workspace = prepare_test_workspace(test_ws_root, suite_name, option, case)
+    test_workspace = prepare_test_workspace(test_ws_root, suite_name, case)
 
-    config_running_device(option)
     if case not in test_config.suite_cfg.test_config_map.keys():
         exit("The test case " + case + " is not in the " + case + " test suite! Please double check.")
     single_case_config = test_config.suite_cfg.test_config_map[case]
@@ -364,16 +370,6 @@ def check_deps():
     test_config.cuda_ver = get_cuda_version()
     if not test_config.cuda_ver:
         exit("The CUDA header files have not been detected. Please double check setting for CUDA header files.")
-
-    # Please specify oneMKL build and run environment by following oneAPI document.
-'''
-    if os.getenv("MKLROOT"):
-        mkl_header = os.path.join(os.environ["MKLROOT"], "include", "mkl.h")
-        if not os.path.exists(mkl_header) and os.getenv("MKLVER"):
-            mkl_header = os.path.join(os.environ["MKLROOT"], os.environ["MKLVER"], "include", "mkl.h")
-    else:
-        exit("MKL header files have not been found. Please check setting for oneMKL.")
-'''
 
 def do_sanity_test():
     check_deps()
@@ -410,23 +406,15 @@ def get_suite_list():
         suite_list[suite_name] = suite_cfg
     return suite_list
 
-def config_running_device(opt):
-    if "cpu" in opt:
-        test_config.device_filter = "CPU"
-    if "gpu" in opt:
-        test_config.device_filter = "LEVEL_ZERO:GPU"
-    test_config.migrate_option = test_config.option_map[opt]
-
-def test_suite_with_opt(suite_root_path, suite_name, opt):
-    config_running_device(opt)
-    return test_suite(suite_root_path, suite_name, opt)
+def test_suite_with_opt(suite_root_path, suite_name):
+    return test_suite(suite_root_path, suite_name)
 
 # Test the suite with the opts list.
-def test_suite_with_opts(suite_root_path, suite_name, opts):
+def test_suite_with_opts(suite_root_path, suite_name):
     ret = True
-    for opt in opts:
-        os.chdir(test_config.root_path)
-        ret = test_suite_with_opt(suite_root_path, suite_name, opt.strip()) and ret
+    # for opt in opts:
+    os.chdir(test_config.root_path)
+    ret = test_suite_with_opt(suite_root_path, suite_name) and ret
     return ret
 
 def test_full_suite_list(suite_list):
@@ -437,20 +425,20 @@ def test_full_suite_list(suite_list):
         suite_root_path = suite_list[suite_name][0]
         if os.path.exists(suite_root_path):
             suite_root_path = os.path.abspath(suite_root_path)
-        opts = suite_list[suite_name][1].split(",")
-        ret = test_suite_with_opts(suite_root_path, suite_name, opts) and ret
+        # opts = suite_list[suite_name][1].split(",")
+        ret = test_suite_with_opts(suite_root_path, suite_name) and ret
     return ret
 
-def get_option_mapping():
-    with open("option_mapping.json") as f:
-        return json.load(f)
+# def get_option_mapping():
+#     with open("option_mapping.json") as f:
+#         return json.load(f)
 
-def define_global_test_option(opt, option_list):
-    if opt not in option_list:
-        sys.stderr.write("Must specify the option for test_suite_list.xml")
-        exit(1)
-    test_config.test_option = opt
-    return True
+# def define_global_test_option(opt, option_list):
+#     if opt not in option_list:
+#         sys.stderr.write("Must specify the option for test_suite_list.xml")
+#         exit(1)
+#     test_config.test_option = opt
+#     return True
 
 def parse_input_args():
     parser = argparse.ArgumentParser(description = "Test driver for C2S tool. \n", formatter_class=RawTextHelpFormatter,
@@ -465,23 +453,23 @@ def parse_input_args():
                     help = "The suites to run. e.g.: -s regressions. Please ref the test_suite_list.xml ")
     parser.add_argument("--case", "-c", action = "store", default = "",
                     help = "The test of suite to run. e.g.: -c simple_add. Please ref the <suite>.xml")
-    parser.add_argument("--option", "-o", action = "store", default = "",
-                    help = "The option applies to test. e.g.: -o option_cpu. Please ref the option_mapping.json")
-    parser.add_argument("--device", '-d', action = "store", default = "",
-                    help = "Current support Gen9 and Gen12 backend device. e.g.: -d Gen9")
+    # parser.add_argument("--option", "-o", action = "store", default = "",
+    #                 help = "The option applies to test. e.g.: -o option_cpu. Please ref the option_mapping.json")
+    # parser.add_argument("--device", '-d', action = "store", default = "",
+    #                 help = "Current support Gen9 and Gen12 backend device. e.g.: -d Gen9")
     args = parser.parse_args()
-    if args.option and not args.suite:
-        sys.stderr.write("Must specify the suite target to run.\n")
-        exit(1)
-    if args.suite and not args.option:
-        sys.stderr.write("Must specify the option for suite target to run.\n")
-        exit(1)
+    # if not args.suite:
+    #     sys.stderr.write("Must specify the suite target to run.\n")
+    #     exit(1)
+    # if args.suite and not args.option:
+    #     sys.stderr.write("Must specify the option for suite target to run.\n")
+    #     exit(1)
     if args.case and not args.suite:
         sys.stderr.write("Must specify the suite target to run.\n")
         exit(1)
-    if args.device and args.device not in test_config.gpu_device:
-        sys.stderr.write("Only support Gen9 and Gen12 GPU device.\n")
-        exit(1)
+    # if args.device and args.device not in test_config.gpu_device:
+    #     sys.stderr.write("Only support Gen9 and Gen12 GPU device.\n")
+    #     exit(1)
     return args
 
 def main():
@@ -491,8 +479,10 @@ def main():
 
     suite_list = get_suite_list()
     test_config.root_path = os.getcwd()
-    test_config.option_map = get_option_mapping()
-    test_config.backend_device = args.device
+    global result_string
+    result_string=""
+    # test_config.option_map = get_option_mapping()
+    # test_config.backend_device = args.device
 
     ret = True
     # Run all the tests in the test_suite_list.xml
@@ -500,12 +490,13 @@ def main():
         ret = test_full_suite_list(suite_list)
     else:
         suite_root_path = os.path.abspath(suite_list[args.suite][0])
-        define_global_test_option(args.option, suite_list[args.suite][1])
+        # define_global_test_option(args.option, suite_list[args.suite][1])
         if not args.case:
-            ret = test_suite_with_opt(suite_root_path, args.suite, args.option)
+            ret = test_suite_with_opt(suite_root_path, args.suite)
         elif args.case:
-            ret = test_single_case_in_suite(suite_root_path, args.suite, args.case, args.option)
+            ret = test_single_case_in_suite(suite_root_path, args.suite, args.case)
     if not ret:
+        print(result_string)
         sys.stderr.write("Some test case(s) fail\n")
         exit(-1)
     print("----------------Test pass-----------------")
